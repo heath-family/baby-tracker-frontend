@@ -1,0 +1,5 @@
+svg.Timeline {
+  width: 100vw;
+  outline: 1px solid black;
+  height: calc(100vh - 150px);
+}
