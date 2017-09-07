@@ -49,10 +49,9 @@ export default class TimeColumn extends Component {
     let afternoon = time.getHours() >= 12
     let newDay = time.getTime() === startOfDay(time).getTime()
 
-    let options = {};
     if (newDay) {
       return "" + time.getDate() + " " + months[time.getMonth()]
-    } else if (m == 0) {
+    } else if (m === 0) {
       return "" + h + " " + (afternoon ? "PM" : "AM")
     }
 
