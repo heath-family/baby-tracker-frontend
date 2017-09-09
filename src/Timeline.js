@@ -1,14 +1,46 @@
+/* @flow */
 import React, { Component } from 'react';
 import './Timeline.css';
 import TimeColumn from "./TimeColumn";
+import EventColumn from "./EventColumn";
+import type TimeRange from "./TimeRange"
+import type { EventProps } from "./EventBlock"
+
+type Props = {
+  height: number,
+  width: number,
+  range: TimeRange,
+  columns: {[string] : Array<EventProps>}
+}
 
 // Renders a graphical representation of a series of events
-export default class Timeline extends Component {
+export default class Timeline extends Component<Props> {
+
+  timeColumnWidth() {
+    return this.props.width / 5
+  }
+
+  renderColumns() {
+    const columnCount = Object.keys(this.props.columns).length
+    const totalWidth = this.props.width * 4 / 5
+
+    return Object.keys(this.props.columns).map((title, idx) =>
+      <EventColumn
+        title={title}
+        key={idx}
+        range={this.props.range}
+        events={this.props.columns[title]}
+        height={this.props.height}
+        width={totalWidth / columnCount}
+        x={this.timeColumnWidth() + idx * totalWidth / columnCount}
+      />
+    )
+  }
 
   render() {
     let labelInterval = TimeColumn.fifteenMinutes
 
-    while (((this.props.endTime - this.props.startTime) / labelInterval) > window.outerHeight / 100) {
+    while ((this.props.range.inMilliseconds() / labelInterval) > window.outerHeight / 100) {
       labelInterval = labelInterval * 2
     }
 
@@ -20,17 +52,17 @@ export default class Timeline extends Component {
         preserveAspectRatio="xMinYMin meet"
       >
           <TimeColumn
-            endTime={this.props.endTime}
-            startTime={this.props.startTime}
+            range={this.props.range}
             labelInterval={labelInterval}
-            height={window.innerHeight - 150}
-            width={window.innerWidth}
+            height={this.props.height}
+            width={this.timeColumnWidth()}
           />
+          {this.renderColumns()}
+
       </svg>
     );
   }
 }
-
 
 // All SVG properties:
 // accentHeight accumulate additive alignmentBaseline allowReorder alphabetic

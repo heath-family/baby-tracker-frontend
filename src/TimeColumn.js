@@ -1,31 +1,41 @@
+/* @flow */
 import React, { Component } from 'react';
 import './TimeColumn.css';
+import type TimeRange from "./TimeRange"
 
 function startOfDay(when: Date): Date {
   let result = new Date(when)
   result.setHours(0,0,0,0)
   return result
 }
-const TEXT_HEIGHT = 35
-export default class TimeColumn extends Component {
+
+type Props = {
+  labelInterval: number,
+  textHeight: number,
+  range: TimeRange,
+  height: number,
+  width: number
+}
+export default class TimeColumn extends Component<Props> {
   static fifteenMinutes = 15 * 60 * 1000;
   static threeHours = 3 * 60 * 60 * 1000
   static defaultProps = {
     labelInterval: TimeColumn.fifteenMinutes,
+    textHeight: 35
   }
 
   labelCount() {
-    return (this.props.endTime - this.props.startTime) / this.props.labelInterval
+    return this.props.range.inMilliseconds() / this.props.labelInterval
   }
 
   yCoord(time: Date): number {
-    return (time - this.props.startTime) / (this.props.endTime - this.props.startTime) * this.props.height + TEXT_HEIGHT
+    return this.props.textHeight + this.props.height * this.props.range.fractionThrough(time)
   }
 
   times() {
     // from start of day @ startTime until end of day at endTime, add labelInterval if in bounds.
-    let now = startOfDay(this.props.startTime)
-    let end = this.props.endTime
+    let now = startOfDay(this.props.range.start)
+    let end = this.props.range.end
     let result = []
 
     // Handle bad values for end/now
@@ -34,7 +44,7 @@ export default class TimeColumn extends Component {
     }
 
     while (now < end) {
-      if (now >= this.props.startTime) {
+      if (now >= this.props.range.start) {
         result.push(now)
       }
       now = new Date(now.getTime() + this.props.labelInterval);
@@ -42,6 +52,10 @@ export default class TimeColumn extends Component {
     return result
   }
 
+  // TODO: Formatter should have
+  // * No AM/PM
+  // * Except on the hour, when it should have no minutes
+  // * And at midnight it should have the date
   format(time: Date): string {
     const months = ["Jan", "Feb", "Mar", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     let h = (time.getHours() + 23) % 12 + 1
@@ -55,18 +69,10 @@ export default class TimeColumn extends Component {
       return "" + h + " " + (afternoon ? "PM" : "AM")
     }
 
-    return new Intl.DateTimeFormat(
-      'en-US',
-      {hour: 'numeric', minute: '2-digit'}
-    ).format(time);
+    return "" + h + ":" + m
   }
 
   render() {
-    // TODO: Formatter should have
-    // * No AM/PM
-    // * Except on the hour, when it should have no minutes
-    // * And at midnight it should have the date
-
     return (
       <svg
         className="TimeColumn"
